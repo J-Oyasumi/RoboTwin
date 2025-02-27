@@ -93,18 +93,18 @@ class Base_task(gym.Env):
         self.real_head_pcl_color = None
 
         # head camera
-        self.head_camera_fovy = kwags.get('head_camera_fovy')
-        self.head_camera_w = kwags.get('head_camera_w')
-        self.head_camera_h = kwags.get('head_camera_h')
+        self.head_camera_fovy = 45
+        self.head_camera_w = 320
+        self.head_camera_h = 180
 
         # wrist & front camera
-        self.wrist_camera_fovy = kwags.get('wrist_camera_fovy')
-        self.wrist_camera_w = kwags.get('wrist_camera_w')
-        self.wrist_camera_h = kwags.get('wrist_camera_h')
+        self.wrist_camera_fovy = 45
+        self.wrist_camera_w = 320
+        self.wrist_camera_h = 180
 
-        self.front_camera_fovy = kwags.get('front_camera_fovy')
-        self.front_camera_w = kwags.get('front_camera_w')
-        self.front_camera_h = kwags.get('front_camera_h')
+        self.front_camera_fovy = 45
+        self.front_camera_w = 320
+        self.front_camera_h = 180
 
         self.save_freq = kwags.get('save_freq')
         
@@ -317,8 +317,8 @@ class Base_task(gym.Env):
         self.observer_camera = self.scene.add_camera(
             name = "observer_camera",
             width=320,
-            height=240,
-            fovy=np.deg2rad(93),
+            height=180,
+            fovy=np.deg2rad(45),
             near=near,
             far=far,
         )
@@ -1139,6 +1139,7 @@ class Base_task(gym.Env):
         self.right_camera.take_picture()
         self.head_camera.take_picture()
         self.front_camera.take_picture()
+        self.observer_camera.take_picture()
 
         head_pcd = self._get_camera_pcd(self.head_camera, point_num=0)
         left_pcd = self._get_camera_pcd(self.left_camera, point_num=0)
@@ -1152,6 +1153,8 @@ class Base_task(gym.Env):
         left_depth = self._get_camera_depth(self.left_camera)
         right_depth = self._get_camera_depth(self.right_camera)
         front_depth = self._get_camera_depth(self.front_camera)
+        
+        observer_rgba = self._get_camera_rgba(self.observer_camera)
 
         # Merge PointCloud
         if self.data_type.get("conbine", False):
@@ -1165,12 +1168,15 @@ class Base_task(gym.Env):
                 "head_camera":{},   # rbg , mesh_seg , actior_seg , depth , intrinsic_cv , extrinsic_cv , cam2world_gl(model_matrix)
                 "left_camera":{},
                 "right_camera":{},
-                "front_camera":{}
+                "front_camera":{},
+                "observer_camera":{},
             },
             "pointcloud":[],   # conbinet pcd
             "joint_action":[],
             "endpose":[]
         }
+        
+        obs["observation"]["observer_camera"]["rgb"] = observer_rgba[:,:,:3]
         
         head_camera_intrinsic_cv = self.head_camera.get_intrinsic_matrix()
         head_camera_extrinsic_cv = self.head_camera.get_extrinsic_matrix()
